@@ -148,7 +148,7 @@ def cmd_show():
 
 
 def cmd_chat():
-    """Full chat loop — kept minimal here, use chat.py for the full experience."""
+    """Full chat loop with relevance gate for context injection."""
     parser = argparse.ArgumentParser(description="Experience-aware chat")
     parser.add_argument("--data-dir",   default="experience", help="data directory path")
     parser.add_argument("--model",      default="mistral",    help="Ollama model name")
@@ -164,9 +164,34 @@ def cmd_chat():
 
     SYSTEM = (
         "You are a senior advisor with deep knowledge of this user's cognitive patterns. "
-        "Write in direct prose. No numbered lists. Name cognitive patterns by label. "
-        "Identify where their specific wiring creates risk. Be direct and specific.\n\n"
+        "Write in direct prose. No numbered lists. Be concise.\n"
+        "CRITICAL RULES:\n"
+        "- Only reference cognitive patterns when directly relevant to the question asked.\n"
+        "- Never volunteer analysis the user did not ask for.\n"
+        "- For greetings or small talk, respond naturally and briefly like a normal person.\n"
+        "- Save the depth for questions that deserve it.\n\n"
     )
+
+    _SUBSTANTIVE_TRIGGERS = [
+        "what", "how", "why", "should", "which", "where", "when",
+        "help", "advice", "recommend", "think", "decide", "build",
+        "choose", "compare", "explain", "difference", "better",
+        "problem", "issue", "risk", "approach", "strategy",
+    ]
+
+    _SOCIAL = {
+        "hi", "hello", "hey", "thanks", "thank you", "ok",
+        "okay", "sure", "yes", "no", "bye", "good morning",
+        "good evening", "good night", "how are you", "sup",
+    }
+
+    def _is_substantive(question: str) -> bool:
+        q = question.lower().strip()
+        if len(q.split()) < 4:
+            return False
+        if q in _SOCIAL or q.rstrip("!?.") in _SOCIAL:
+            return False
+        return any(trigger in q for trigger in _SUBSTANTIVE_TRIGGERS)
 
     print(f"\n{'═'*64}")
     print("  Experience Engine — chat")
@@ -184,9 +209,12 @@ def cmd_chat():
         if not question:
             continue
 
-        context = "" if args.no_context else (
-            format_cognitive_block(config) + format_belief_block(config=config)
-        )
+        # Only inject experience context when the question warrants it
+        inject = (not args.no_context) and _is_substantive(question)
+
+        context = ""
+        if inject:
+            context = format_cognitive_block(config) + format_belief_block(config=config)
 
         conv = ""
         if history:
@@ -205,4 +233,4 @@ def cmd_chat():
         print(f"\nAssistant: {answer}\n")
         entry = log_interaction(question, answer, config=config)
         history.append((question, answer))
-        print(f"  [logged | conf: {entry['confidence']:.2f}]\n")
+        print(f"  [logged | context: {'injected' if inject else 'skipped'} | conf: {entry['confidence']:.2f}]\n")
