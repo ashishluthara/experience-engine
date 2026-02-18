@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "experience-engine"
+version = "0.1.0"
+description = "A reflection-based memory layer for LLM apps. Your AI stops being reactive and starts being developmental."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = ["llm", "memory", "reflection", "ai", "ollama", "cognitive"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+# Zero required dependencies — pure stdlib + Ollama
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "black", "ruff"]
+
+[project.scripts]
+experience-reflect  = "experience_engine.cli:cmd_reflect"
+experience-synthesize = "experience_engine.cli:cmd_synthesize"
+experience-show     = "experience_engine.cli:cmd_show"
+experience-chat     = "experience_engine.cli:cmd_chat"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["experience_engine*"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.black]
+line-length = 100
