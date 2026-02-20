@@ -5,7 +5,7 @@ Your AI stops being reactive and starts being developmental.
 
 Most AI apps have memory. This one has **experience**.
 
-```
+```bash
 pip install experience-engine
 ```
 
@@ -19,14 +19,22 @@ Every conversation starts from zero. Your LLM doesn't know:
 - Where your reasoning creates blind spots
 - What contradictions exist in your goals
 
-This package solves that with a two-layer pipeline:
+This package solves that with a three-layer pipeline:
 
 ```
-Interactions → [Reflection] → Domain Beliefs (V1)
-                                    ↓
-              [Synthesis]  → Cognitive Patterns (V2)
-                                    ↓
-              [Chat]       → Context-aware responses
+Social Media + Chat Exports
+        │
+        ▼ experience-ingest
+Raw Interactions (episodic_log.jsonl)
+        │
+        ▼ experience-reflect
+Domain Beliefs (V1) — what you think
+        │
+        ▼ experience-synthesize
+Cognitive Patterns (V2) — how you think
+        │
+        ▼ experience-chat
+Context-aware responses tailored to your cognitive signature
 ```
 
 ---
@@ -37,7 +45,7 @@ Interactions → [Reflection] → Domain Beliefs (V1)
 pip install experience-engine
 ```
 
-**Requirements:** Python 3.10+ · [Ollama](https://ollama.ai) (local LLM)
+**Requirements:** Python 3.10+ · [Ollama](https://ollama.ai)
 
 ```bash
 ollama serve
@@ -48,53 +56,119 @@ Zero additional Python dependencies.
 
 ---
 
-## Quickstart (20 lines)
+## Quickstart
+
+### Option A — Start from social media data (fastest way to build a profile)
+
+```bash
+# Step 1: Ingest your data
+experience-ingest tweets.js --platform twitter
+experience-ingest "WhatsApp Chat.txt" --platform whatsapp --user "Your Name"
+experience-ingest posts.csv --platform linkedin_posts
+
+# Step 2: Extract beliefs from your posts and messages
+experience-reflect
+
+# Step 3: Extract cognitive patterns from beliefs
+experience-synthesize
+
+# Step 4: See your cognitive signature
+experience-show
+
+# Step 5: Chat with full context
+experience-chat
+```
+
+### Option B — Start from scratch via chat
 
 ```python
-from experience_engine import (
-    log_interaction,
-    run_reflection,
-    run_synthesis,
-    format_cognitive_block,
-    format_belief_block,
-    apply_patterns,
-)
+from experience_engine import log_interaction, run_reflection, run_synthesis
 
-# 1. Log interactions (call this after every LLM exchange)
 log_interaction("What is karma yoga?", "Selfless action without attachment...")
 log_interaction("Should I use cloud or local storage?", "Start local, scale later...")
 
-# 2. Reflect: extract domain beliefs from the log
 beliefs = run_reflection()
-# → [{"belief": "User prefers local infrastructure", "confidence": 0.88, ...}]
-
-# 3. Synthesize: extract cognitive patterns from beliefs
-result = run_synthesis()
-# → {"cognitive_patterns": [...], "decision_archetype": {"dominant": "control-first"}, ...}
-
-# 4. Inject into your chat prompts
-context = format_cognitive_block() + format_belief_block()
-prompt  = context + "User: " + question
-
-# 5. Apply patterns to new situations
-analysis = apply_patterns("Should I use LangChain or build my own orchestration?")
+result  = run_synthesis()
 ```
 
 ---
 
-## What V1 Produces (Beliefs)
+## Social Media Ingestion
+
+Export your data from any platform and feed it directly into the pipeline.
+The engine reads your posts and messages, extracts how you think, and builds
+your cognitive profile without you having to chat with it first.
+
+### Supported Platforms
+
+| Platform | Export format | How to export |
+|---|---|---|
+| WhatsApp | `.txt` | Chat → ⋮ → Export Chat |
+| Twitter / X | `tweets.js` | Settings → Your Account → Download Archive |
+| LinkedIn Posts | `posts.csv` | Settings → Data Privacy → Get a copy of your data |
+| LinkedIn Messages | `messages.csv` | Settings → Data Privacy → Get a copy of your data |
+| Instagram | `.json` | Settings → Your Activity → Download Your Information |
+| Telegram | `result.json` | Desktop App → Settings → Export Telegram Data |
+| Generic CSV | `.csv` | Any file with a text/content/message column |
+| Generic JSON | `.json` | Any JSON array of posts or messages |
+
+### CLI
+
+```bash
+# WhatsApp — provide your display name to identify your messages
+experience-ingest "WhatsApp Chat.txt" --platform whatsapp --user "Ashish"
+
+# Twitter — no user handle needed (all tweets are yours)
+experience-ingest tweets.js --platform twitter
+
+# LinkedIn
+experience-ingest posts.csv --platform linkedin_posts
+experience-ingest messages.csv --platform linkedin_messages --user "Ashish Luthara"
+
+# Telegram
+experience-ingest result.json --platform telegram --user "Ashish"
+
+# Auto-detect platform from filename
+experience-ingest tweets.js
+experience-ingest "WhatsApp Chat.txt" --user "Ashish"
+```
+
+### Python API
+
+```python
+from experience_engine import ingest, ingest_file
+
+# From a file
+result = ingest_file("tweets.js", user_handle="ashishluthara")
+print(result.summary())
+# → [twitter] 847 ingested | 23 skipped | 870 total parsed
+
+# From raw text
+with open("WhatsApp Chat.txt") as f:
+    result = ingest(f.read(), platform="whatsapp", user_handle="Ashish")
+```
+
+---
+
+## What the Pipeline Produces
+
+### V1 — Domain Beliefs
 
 ```
 [DOMAIN KNOWLEDGE]
-██████████ 0.95  User is studying the Bhagavad Gita
-              ↳ Asked about karma yoga and the three margas across multiple sessions
+██████████ 0.95  User is deeply studying the Bhagavad Gita
+              ↳ Multiple posts and questions about karma yoga, the three margas
 
 [VALUE]
 █████████  0.90  User values ordered progression — strict sequence before expansion
               ↳ Corrected AI when it suggested learning all margas simultaneously
+
+[TECHNICAL PREFERENCE]
+█████████  0.88  User prefers local infrastructure over cloud dependencies
+              ↳ Consistent preference across WhatsApp messages and Twitter posts
 ```
 
-## What V2 Produces (Cognitive Patterns)
+### V2 — Cognitive Patterns
 
 ```
 [COGNITIVE PATTERNS]
@@ -103,11 +177,11 @@ analysis = apply_patterns("Should I use LangChain or build my own orchestration?
 Deterministic progression bias — masters step N before N+1, across all domains
   ↳ spiritual: Karma Marga → Jnana Marga as strict sequence
   ↳ technical: local build → scale later
-  → Transfer: will prefer curriculum-style AI learning over exploratory access
+  → Transfer: will prefer curriculum-style learning over exploratory access
 
 █████████  0.85
 Control-first architecture — optimizes for observability before throughput
-  ↳ chose local files over cloud DB
+  ↳ local Ollama over cloud APIs
   ↳ corrects AI to maintain precision of its own belief system
 
 [DECISION ARCHETYPE]  ★ CONTROL-FIRST
@@ -128,15 +202,24 @@ B: Avoids external dependencies, prefers local infrastructure
 ## Before / After
 
 **Without experience:**
-> "You should consider using a managed vector database for your RAG system.
-> Options include Pinecone, Weaviate, or Chroma."
+> "You should consider using a managed vector database for your RAG system."
 
 **With experience:**
-> "Your control-first archetype will resist Pinecone — and that instinct is right
-> for now. Chroma local is the correct move. But note the tension: when you do
-> need to scale, your aversion to managed services will slow you down. Set a
-> concrete threshold now — '1M vectors' or '10ms p99 latency' — so the migration
-> decision is already made before the pressure hits."
+> "Your control-first archetype will resist Pinecone — that instinct is right
+> for now. Chroma local is the correct move. But set a concrete threshold now
+> so the migration decision is already made before the pressure hits."
+
+---
+
+## CLI Reference
+
+```bash
+experience-ingest <file>  [--platform] [--user] [--data-dir]
+experience-reflect        [--window N] [--data-dir]
+experience-synthesize     [--transfer "situation"] [--data-dir]
+experience-show           [--beliefs] [--patterns] [--tensions]
+experience-chat           [--no-context] [--data-dir]
+```
 
 ---
 
@@ -146,17 +229,11 @@ B: Avoids external dependencies, prefers local infrastructure
 from experience_engine import EngineConfig
 
 config = EngineConfig(
-    data_dir   = "experience",          # where to store logs and beliefs
-    model      = "mistral",             # any Ollama model
-    ollama_url = "http://localhost:11434/api/generate",
-    reflection_window      = 50,        # interactions analyzed per reflection
-    min_belief_confidence  = 0.6,       # beliefs below this are dropped
-    min_pattern_confidence = 0.65,
+    data_dir              = "experience",
+    model                 = "mistral",
+    reflection_window     = 50,
+    min_belief_confidence = 0.6,
 )
-
-# Pass config to any function
-beliefs = run_reflection(config=config)
-result  = run_synthesis(config=config)
 ```
 
 Override with environment variables:
@@ -166,27 +243,10 @@ EXPERIENCE_DIR=./my_data EXPERIENCE_MODEL=llama3 python your_app.py
 
 ---
 
-## CLI (after pip install)
-
-```bash
-experience-reflect              # log → beliefs
-experience-synthesize           # beliefs → cognitive patterns
-experience-show                 # display everything
-experience-show --beliefs       # beliefs only
-experience-show --tensions      # tensions only
-experience-synthesize --transfer "I'm choosing a cloud provider"
-experience-chat                 # interactive chat loop
-```
-
----
-
 ## Bring Your Own LLM
-
-Don't want Ollama? Pass any callable:
 
 ```python
 def my_llm(prompt: str, temperature: float, config) -> str:
-    # call OpenAI, Anthropic, llama.cpp, etc.
     return your_api_call(prompt, temperature)
 
 beliefs = run_reflection(llm_fn=my_llm)
@@ -205,17 +265,21 @@ experience/
 └── tensions.json           ← V2: active contradictions
 ```
 
-All storage is plain JSON. No database. Inspect, edit, back up with standard tools.
+Plain JSON. No database. Inspect, edit, back up with standard tools.
 
 ---
 
 ## Roadmap
 
+- [x] Reflection-based belief extraction (V1)
+- [x] Cognitive pattern synthesis (V2)
+- [x] Social media ingestion (WhatsApp, Twitter, LinkedIn, Instagram, Telegram)
+- [x] Relevance gate (context only injected when question warrants it)
 - [ ] Confidence decay (old patterns fade without reinforcement)
 - [ ] Outcome tracking (did the advice work?)
 - [ ] Tension resolution tracking
 - [ ] Temporal archetype shift detection
-- [ ] OpenAI / Anthropic adapters out of the box
+- [ ] OpenAI / Anthropic adapters
 
 ---
 
