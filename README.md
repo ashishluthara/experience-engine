@@ -58,6 +58,10 @@ Zero additional Python dependencies.
 
 ## Quickstart
 
+> 📋 **Want to assess yourself using your own social media data?**
+> See the full step-by-step guide: [SELF_ASSESSMENT.md](SELF_ASSESSMENT.md)
+
+
 ### Option A — Start from social media data (fastest way to build a profile)
 
 ```bash
