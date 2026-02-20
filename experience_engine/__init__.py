@@ -64,7 +64,14 @@ from .synthesis import (
     apply_patterns,
 )
 
-__version__ = "0.1.0"
+from .ingest import (
+    ingest,
+    ingest_file,
+    IngestResult,
+    SUPPORTED_PLATFORMS,
+)
+
+__version__ = "0.2.0"
 __all__ = [
     # config
     "EngineConfig",
@@ -83,4 +90,9 @@ __all__ = [
     "load_tensions",
     "format_cognitive_block",
     "apply_patterns",
+    # ingestion
+    "ingest",
+    "ingest_file",
+    "IngestResult",
+    "SUPPORTED_PLATFORMS",
 ]

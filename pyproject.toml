@@ -26,10 +26,11 @@ dependencies = []
 dev = ["pytest>=7.0", "black", "ruff"]
 
 [project.scripts]
-experience-reflect  = "experience_engine.cli:cmd_reflect"
+experience-reflect    = "experience_engine.cli:cmd_reflect"
 experience-synthesize = "experience_engine.cli:cmd_synthesize"
-experience-show     = "experience_engine.cli:cmd_show"
-experience-chat     = "experience_engine.cli:cmd_chat"
+experience-show       = "experience_engine.cli:cmd_show"
+experience-chat       = "experience_engine.cli:cmd_chat"
+experience-ingest     = "experience_engine.cli:cmd_ingest"
 
 [tool.setuptools.packages.find]
 where = ["."]
