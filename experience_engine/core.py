@@ -7,7 +7,7 @@ Public API:
     log_interaction(question, answer, config) -> dict
     load_log(n, config) -> list[dict]
 """
-
+import injest
 import json
 import re
 import uuid
